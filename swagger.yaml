@@ -1,0 +1,432 @@
+# This is a demonstration of an Swagger API spec in YAML
+# For verbose documentation Swagger YAML API specification see http://swagger.io/specification/
+# Sample specification can be found at https://github.com/OAI/OpenAPI-Specification/tree/master/examples/v2.0/yaml
+# For visual editor go to http://editor.swagger.io/#/
+
+swagger: '2.0'
+info:
+  title: Metabuster V3
+  description: Endpoints to feed and provide metabuster data
+  version: "0.0.1"
+  contact:
+    email: "Jacek.Kleska@stepstone.com"
+
+tags:
+  - name: Metabuster data setter
+    description: Metabuster data setter
+  - name: Metabuster data provider
+    description: Metabuster data provider
+
+paths:
+
+  /v1/keyword:
+    post:
+      tags:
+        - Metabuster data setter
+      summary: Update keyword data
+      description: Endpoint to insert or update Metabuster data by array of objects.
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: apiKey
+          in: header
+          description: key used for request authentication
+          type: string
+        - name: keywords
+          in: body
+          description: Keywords to insert or update. Required scenario, keyqord, language and one other parameter from list.
+          required: true
+          schema:
+            $ref: '#/definitions/dataSetItemInsertArray'
+
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/responseOk'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/BadRequestResponse'
+        '401':
+          description: Access denied
+        '403':
+          description: Forbidden
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+
+  /v1/keyword/search:
+    post:
+      tags:
+        - Metabuster data provider
+      summary: Return an Array with Metabuster data from database
+      description: Endpoint to get data from Metabuster
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      parameters:
+        - name: apiKey
+          in: header
+          description: key used for request authentication
+          type: string
+        - name: mbQuery
+          required: true
+          in: body
+          schema:
+            $ref: '#/definitions/mbQuery'
+
+      responses:
+        '200':
+          description: Success
+          schema:
+            $ref: '#/definitions/dataset'
+        '400':
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/BadRequestResponse'
+        '401':
+          description: Access denied
+        '403':
+          description: Forbidden
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+
+definitions:
+
+  responseOk:
+    description: Response for success
+    properties:
+      status:
+        type: boolean
+        default: true
+
+  mbQuery:
+    description: Metabuster search parameters
+    required:
+      - size
+      - language
+    properties:
+      language:
+        type: string
+        example: de
+      size:
+        description: Size for metabuster query
+        type: integer
+        format: int32
+        example: 100
+      offset:
+        description: Offset for metabuster query
+        type: integer
+        format: int32
+        example: 100
+        default: 0
+      filters:
+        type: array
+        description: Array with parameters for filtering Metabuster query
+        items:
+          $ref: '#/definitions/filterSchema'
+      fieldstoreturn:
+        type: array
+      orderby:
+        type: object
+        description: Parameter for sorting
+        required:
+          - name
+        properties:
+          name:
+            description: Record name for sort
+            type: string
+            example: offercount
+          ordertype:
+            description: Order direction
+            enum:
+              - ASC
+              - DESC
+            type: string
+            default: ASC
+            example: ASC
+
+  filterSchema:
+    description: Filter for filtering query from Metabuster
+    type: object
+    required:
+      - name
+    properties:
+        name:
+          description: Filter name from database like qualityscore, offercount
+          type: string
+          example: offercount
+        min:
+          description: Minimum value for filter
+          type: integer
+          format: int32
+          default: 0
+          example: 1
+        max:
+          description: Maximum value for filter
+          type: integer
+          format: int32
+          default: 0
+          example: 10
+        value:
+          description: Value
+          type: string
+          example: PHP
+
+  dataset:
+    description: Data set
+    type: object
+    required:
+      - results
+      - total_count
+      - offset
+    properties:
+      results:
+        description: Results array
+        type: array
+        items:
+          $ref: '#/definitions/dataSetItemReturn'
+      total_count:
+        description: Total results in database
+        type: integer
+        default: 0
+        example: 16
+      offset:
+        type: integer
+        default: 0
+        example: 7
+
+  dataSetItemInsertArray:
+    type: array
+    items:
+      $ref: '#/definitions/dataSetItemInsert'
+
+  dataSetItemInsert:
+    required:
+      - language
+      - scenario
+      - keyword
+    description: Data set item
+    properties:
+      keyword:
+        type: string
+        example: Berlin
+      scenario:
+        type: string
+        example: jd
+      function:
+        type: string
+        example: IT
+      function_id:
+        type: integer
+        example: 15
+      jd:
+        type: string
+        example: Tester
+      jd_id:
+        type: integer
+        example: 16
+      geocity:
+        type: string
+        example: Berlin
+      geocity_id:
+        type: integer
+        example: 15
+      georegion:
+        type: string
+        example: Hamburg
+      georegion_id:
+        type: integer
+        example: 15
+      company:
+        type: string
+        example: Stepstone
+      company_id:
+        type: integer
+        example: 15
+      skill:
+        type: string
+        example: Iphone
+      skill_id:
+        type: integer
+        example: 15
+      is_custom:
+        type: boolean
+        default: false
+      qs:
+        type: integer
+        example: 2
+      is_active:
+        type: boolean
+        default: true
+      language:
+        type: string
+        example: de
+
+  dataSetItemReturn:
+    description: Data set item to return
+    properties:
+      keyword:
+        type: string
+        example: Berlin
+      scenario:
+        type: string
+        example: jd
+      function:
+        type: string
+        example: IT
+      function_id:
+        type: integer
+        example: 15
+      jd:
+        type: string
+        example: Tester
+      jd_id:
+        type: integer
+        example: 16
+      geocity:
+        type: string
+        example: Berlin
+      geocity_id:
+        type: integer
+        example: 15
+      georegion:
+        type: string
+        example: Hamburg
+      georegion_id:
+        type: integer
+        example: 15
+      company:
+        type: string
+        example: Stepstone
+      company_id:
+        type: integer
+        example: 15
+      skill:
+        type: string
+        example: Iphone
+      skill_id:
+        type: integer
+        example: 15
+      is_custom:
+        type: boolean
+        default: false
+      qs:
+        type: integer
+        example: 2
+      is_active:
+        type: boolean
+        default: true
+      url:
+        type: string
+        example: https://www.stepstone.com/jobs/IT--Berlin.html
+
+  BadRequestResponse:
+    description: Bad request response. Returns JSON.
+    properties:
+      status:
+        type: string
+        description: Information about bad request data
+        example: Bad filter data
+
+  ErrorResponseService:
+    description: Service description part of the Error Response
+    required:
+      - name
+      - ip
+      - port
+      - version
+    properties:
+      name:
+        type: string
+        description: Service name
+        example: helios-services-alpha
+      ip:
+        type: string
+        description: Service's IP
+        example: 192.168.56.103
+      port:
+        type: string
+        description: Service's port on which the request has been received
+        example: 80
+      version:
+        type: string
+        description: Service version
+        example: 1.0.0
+      environment:
+        type: string
+        description: Service's environment name
+        example: alpha
+
+  ErrorResponseRequest:
+    description: Request description part of the Error Response
+    required:
+      - method
+      - uri
+      - clientIp
+      - id
+    properties:
+      method:
+        type: string
+        description: HTTP method used for request
+        example: GET
+      uri:
+        type: string
+        description: Request's URI
+        example: "http://local.stepstone.de/business-layer/"
+      clientIp:
+        type: string
+        description: Client's IP
+        example: 192.168.56.1
+      id:
+        type: string
+        description: Request Id that can be used to combine multiple service's interactions. See http://eureka.stepstone.com/display/ARCH/Service+Architecture+Guidelines
+        example: 1.0.0
+
+  ErrorResponseError:
+    description: Error part of the Error Response
+    required:
+      - timestamp
+      - severity
+      - message
+      - type
+    properties:
+      timestamp:
+        type: integer
+        format: int64
+        description: Time measured in number of the seconds since the Unix Epoch (1 January 1970)
+      severity:
+        type: string
+        description: Level of the logged event based on the status code.
+        example: CRITICAL
+      message:
+        type: string
+        description: Error message
+        example: You are not authorized to see that page.
+      type:
+        type: string
+        description: Accurate information about the error type
+        example: Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException
+      stackTrace:
+        type: string
+        description: full stacktrace of error
+
+  ErrorResponse:
+    description: Message send with an error
+    required:
+      - error
+    properties:
+        service:
+            $ref: "#/definitions/ErrorResponseService"
+        request:
+            $ref: "#/definitions/ErrorResponseRequest"
+        error:
+            $ref: "#/definitions/ErrorResponseError"
